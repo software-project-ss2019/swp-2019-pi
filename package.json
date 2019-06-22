@@ -1,0 +1,23 @@
+{
+  "name": "swp-2019-pi",
+  "version": "0.0.1",
+  "description": "Softwareproject IoT 2019 Wählisch",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/software-project-ss2019/swp-2019-pi.git"
+  },
+  "author": "Arne Rolf",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/software-project-ss2019/swp-2019-pi/issues"
+  },
+  "homepage": "https://github.com/software-project-ss2019/swp-2019-pi#readme",
+  "dependencies": {
+    "nodemon": "^1.19.1",
+    "onoff": "^4.1.2"
+  }
+}
