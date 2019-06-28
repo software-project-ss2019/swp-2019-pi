@@ -5,24 +5,25 @@ require('firebase/firestore')
 const firebaseConfig = require('./firebaseConfig.key.json')
 
 const Gpio = require('onoff').Gpio
-const lock = new Gpio(21, 'out')
+const lock = new Gpio(18, 'out')
 
-function toggleLock() { 
-  lock.readSync() === 0 ? lock.writeSync(1) : lock.writeSync(0)
+const lockID = 'FcIL855wk4lTqLR5whUY'
+
+function toggleLock(state) {
+  state ? lock.writeSync(1) : lock.writeSync(0)
+  console.log('Lock is isPhysicallyOpen: ', !!lock.readSync())
+  db.collection('locks').doc(lockID).update({ isPhysicallyOpen: lock.readSync() ? true : false })
 }
-
-console.log('State: ', lock.readSync())
-toggleLock()
-console.log('State: ', lock.readSync())
 
 firebase.initializeApp(firebaseConfig)
 const db = firebase.firestore()
 
-let doc = db.collection('users').doc('demZ1b8ebrO8WPRObVsY')
+let doc = db.collection('locks').doc(lockID)
 
 let observer = doc.onSnapshot(docSnapshot => {
-  console.log('Received doc snapshot: ', docSnapshot)
-  // ...
+  console.log('recived update')
+  if (!docSnapshot.exists) console.log('No such document!')
+  else toggleLock(docSnapshot.data().isOpen)
 }, err => {
   console.log('Encountered error: ', err)
 })
