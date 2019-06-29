@@ -9,21 +9,38 @@ const lock = new Gpio(18, 'out')
 
 const lockID = 'FcIL855wk4lTqLR5whUY'
 
-function toggleLock(state) {
-  state ? lock.writeSync(1) : lock.writeSync(0)
-  console.log('Lock is isPhysicallyOpen: ', !!lock.readSync())
+function openLock(isOpen, autoCloseTimer, unsubscribe) {
+  if (!isOpen) return
+  lock.writeSync(1)
+  console.log(`Lock is physically open: ${!!lock.readSync()}, until ${autoCloseTimer / 1000} seconds.`)
+  unsubscribe()
   db.collection('locks').doc(lockID).update({ isPhysicallyOpen: lock.readSync() ? true : false })
+
+  setTimeout(() => {
+    lock.writeSync(0)
+    console.log('Lock is physically closed')
+    db.collection('locks').doc(lockID).update({
+      isOpen: false,
+      isPhysicallyOpen: lock.readSync() ? true : false
+    })
+    subscribe()
+  }, autoCloseTimer)
 }
 
 firebase.initializeApp(firebaseConfig)
 const db = firebase.firestore()
 
 let doc = db.collection('locks').doc(lockID)
+let unsubscribe
 
-let observer = doc.onSnapshot(docSnapshot => {
-  console.log('recived update')
-  if (!docSnapshot.exists) console.log('No such document!')
-  else toggleLock(docSnapshot.data().isOpen)
-}, err => {
-  console.log('Encountered error: ', err)
-})
+function subscribe () {
+  unsubscribe = doc.onSnapshot(docSnapshot => {
+    // console.log('recived update')
+    if (!docSnapshot.exists) console.log('No such document!')
+    else openLock(docSnapshot.data().isOpen, docSnapshot.data().autoCloseTimer, unsubscribe)
+  }, err => {
+    console.log('Encountered error: ', err)
+  })
+}
+
+subscribe()
